@@ -1,57 +1,45 @@
-'use strict';
+const express = require("express");
+const app = express();
+const helmet = require("helmet");
+const cors = require("cors");
+require("dotenv").config();
 
-const express     = require('express');
-const bodyParser  = require('body-parser');
-const expect      = require('chai').expect;
-const cors        = require('cors');
-require('dotenv').config();
+// Prevent sniff and XSS attacks. PD: CSP disable to avoid inline script error
+app.use(helmet({ contentSecurityPolicy: false }));
 
-const apiRoutes         = require('./routes/api.js');
-const fccTestingRoutes  = require('./routes/fcctesting.js');
-const runner            = require('./test-runner');
+// Routes
+const apiRoutes = require("./routes/api.js");
 
-let app = express();
+// Test runner
+const runner = require("./test-runner");
 
-app.use('/public', express.static(process.cwd() + '/public'));
+// Body parser
+app.use(express.urlencoded({ extended: true }));
 
-app.use(cors({origin: '*'})); //For FCC testing purposes only
+// Cors used for FCC testing purposes
+app.use(cors({ origin: "*" }));
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Serving styles and scripts from public dir
+app.use(express.static("public"));
 
-//Index page (static HTML)
-app.route('/')
-  .get(function (req, res) {
-    res.sendFile(process.cwd() + '/views/index.html');
-  });
+// Main route defined
+app.get("/", (req, res) => res.sendFile(`${__dirname}/views/index.html`));
 
-//For FCC testing purposes
-fccTestingRoutes(app);
+//Routing for API
+apiRoutes(app);
 
-//Routing for API 
-apiRoutes(app);  
-    
-//404 Not Found Middleware
-app.use(function(req, res, next) {
-  res.status(404)
-    .type('text')
-    .send('Not Found');
-});
-
+// Server listening
 const port = process.env.PORT || 3000;
-
-//Start our server and tests!
-app.listen(port, function () {
-  console.log("Listening on port " + port);
-  if(process.env.NODE_ENV==='test') {
-    console.log('Running Tests...');
-    setTimeout(function () {
+app.listen(port, () => {
+  console.log(`Server running at port ` + port);
+  if (process.env.NODE_ENV === "test") {
+    console.log("Running Tests...");
+    setTimeout(() => {
       try {
         runner.run();
-      } catch(e) {
-        let error = e;
-          console.log('Tests are not valid:');
-          console.log(error);
+      } catch (err) {
+        console.log("Tests are not valid:");
+        console.log(err);
       }
     }, 1500);
   }

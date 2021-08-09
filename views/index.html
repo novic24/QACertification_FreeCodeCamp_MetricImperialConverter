@@ -48,7 +48,7 @@
           />
           <input id="convert" type="submit" value="Convert!" />
         </form>
-        <p id="result">ssssss</p>
+
         <code id="jsonResult"></code>
       </div>
     </section>
@@ -68,7 +68,7 @@
             type: "get",
             data: $("#convertForm").serialize(),
             success: function (data) {
-              $("#result").text(data.string || data);
+              $("#result").text(data.string || "Error - " + data.error);
               $("#jsonResult").text(JSON.stringify(data));
             }
           });
